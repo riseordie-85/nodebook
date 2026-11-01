@@ -1,6 +1,9 @@
 services:
   prompt-log:
-    build: .
+    # Built by GitHub Actions on every push (see .github/workflows) and pulled
+    # here, so Dockge's Update button gets the newest version.
+    image: ghcr.io/riseordie-85/nodebook:latest
+    pull_policy: always
     container_name: prompt-log
     restart: unless-stopped
     ports:

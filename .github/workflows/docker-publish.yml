@@ -1,0 +1,39 @@
+# Builds the Nodebook image on every push to main and publishes it to GitHub's
+# container registry (ghcr.io). The NUC's Docker stack pulls
+# ghcr.io/riseordie-85/nodebook:latest, so pressing Update in Dockge picks up
+# the newest version - no building on the NUC, no terminal.
+name: Publish image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/riseordie-85/nodebook:latest
+            ghcr.io/riseordie-85/nodebook:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
