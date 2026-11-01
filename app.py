@@ -17,6 +17,7 @@ import db
 from config import Config
 from workflow_parser import extract_metadata, get_full_workflow_json
 import seed_prompt_builder
+import prompt_io
 
 
 def create_app():
@@ -390,6 +391,104 @@ def register_routes(app):
         if cur.rowcount == 0:
             return jsonify({"error": "Item not found"}), 404
         return jsonify({"ok": True})
+
+    # ---------- Prompt builder: Excel import / export ----------
+
+    def _builder_categories():
+        return db.get_db().execute(
+            "SELECT id, key, label FROM prompt_categories ORDER BY sort_order, id").fetchall()
+
+    def _existing_items(conn, category_id):
+        return conn.execute(
+            "SELECT text FROM prompt_items WHERE category_id = ? ORDER BY sort_order, id",
+            (category_id,),
+        ).fetchall()
+
+    @app.route("/generator/export.xlsx")
+    @login_required
+    def generator_export():
+        conn = db.get_db()
+        data = [
+            {"label": c["label"], "items": [r["text"] for r in _existing_items(conn, c["id"])]}
+            for c in _builder_categories()
+        ]
+        return Response(
+            prompt_io.build_workbook(data),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=nodebook_prompts.xlsx"},
+        )
+
+    @app.route("/api/generator/import/preview", methods=["POST"])
+    @login_required
+    def api_builder_import_preview():
+        """Read an uploaded file and report, per category, what an import
+        would do. Nothing is saved; the browser sends the items back to
+        /api/generator/import with the chosen mode for each category."""
+        f = request.files.get("file")
+        if f is None or not f.filename:
+            return jsonify({"error": "Choose a file to import"}), 400
+        categories = _builder_categories()
+        try:
+            parsed = prompt_io.parse(f.filename, f.read(), categories)
+        except prompt_io.ImportError_ as e:
+            return jsonify({"error": str(e)}), 400
+        conn = db.get_db()
+        out = []
+        for c in categories:
+            items = parsed["categories"].get(c["id"])
+            if not items:
+                continue
+            existing = {r["text"].lower() for r in _existing_items(conn, c["id"])}
+            new = [t for t in items if t.lower() not in existing]
+            out.append({
+                "category_id": c["id"], "label": c["label"], "items": items,
+                "in_file": len(items), "new": len(new), "already": len(items) - len(new),
+                "current": len(existing),
+            })
+        return jsonify({"categories": out, "unmatched": parsed["unmatched"]})
+
+    @app.route("/api/generator/import", methods=["POST"])
+    @login_required
+    def api_builder_import():
+        data = request.get_json(silent=True) or {}
+        plan = data.get("categories")
+        if not isinstance(plan, list) or not plan:
+            return jsonify({"error": "Nothing to import"}), 400
+        conn = db.get_db()
+        valid_ids = {c["id"] for c in _builder_categories()}
+        summary = []
+        try:
+            for entry in plan:
+                if not isinstance(entry, dict):
+                    continue
+                cid, mode = entry.get("category_id"), entry.get("mode")
+                if mode == "skip":
+                    continue
+                if cid not in valid_ids or mode not in ("add", "replace"):
+                    raise ValueError("Bad import request")
+                items = prompt_io.dedupe(entry.get("items") or [])
+                if not items:
+                    continue
+                if mode == "replace":
+                    conn.execute("DELETE FROM prompt_items WHERE category_id = ?", (cid,))
+                    existing = set()
+                else:
+                    existing = {r["text"].lower() for r in _existing_items(conn, cid)}
+                to_add = [t for t in items if t.lower() not in existing]
+                start = conn.execute(
+                    "SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM prompt_items WHERE category_id = ?",
+                    (cid,),
+                ).fetchone()["n"]
+                conn.executemany(
+                    "INSERT INTO prompt_items (category_id, text, sort_order) VALUES (?,?,?)",
+                    [(cid, t, start + i) for i, t in enumerate(to_add)],
+                )
+                summary.append({"category_id": cid, "mode": mode, "added": len(to_add)})
+            conn.commit()
+        except ValueError as e:
+            conn.rollback()
+            return jsonify({"error": str(e)}), 400
+        return jsonify({"ok": True, "categories": summary})
 
     # ---------- Upload ----------
 

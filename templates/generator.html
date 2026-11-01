@@ -8,6 +8,9 @@
   <div class="builder-toolbar">
     <button class="btn btn-primary" id="randomize-all-btn" type="button">&#127922; Randomize all</button>
     <button class="btn" id="copy-top-btn" type="button">Copy prompt</button>
+    <span class="builder-toolbar-spacer"></span>
+    <button class="btn" id="import-btn" type="button">Import Excel</button>
+    <a class="btn" href="{{ url_for('generator_export') }}" download>Export Excel</a>
   </div>
 
   <div id="builder-cards" class="builder-cards"></div>
@@ -34,9 +37,35 @@
   </form>
 </dialog>
 
+<dialog id="import-dialog" class="builder-dialog import-dialog">
+  <form method="dialog" id="import-form">
+    <h2>Import from Excel</h2>
+    <div id="import-step-file">
+      <p class="muted small-note">Upload an .xlsx (or .csv) with one column per category and the category names in row 1. Tip: use <strong>Export Excel</strong> to get a file in the right shape.</p>
+      <input type="file" id="import-file" accept=".xlsx,.xlsm,.csv">
+    </div>
+    <div id="import-step-preview" hidden>
+      <p class="muted small-note" id="import-summary"></p>
+      <div class="import-table-wrap">
+        <table class="import-table">
+          <thead><tr><th>Category</th><th>In file</th><th>New</th><th>Action</th></tr></thead>
+          <tbody id="import-rows"></tbody>
+        </table>
+      </div>
+      <p class="muted small-note"><strong>Add new</strong> keeps what's there and adds prompts it doesn't already have. <strong>Replace all</strong> deletes the category's current prompts first.</p>
+    </div>
+    <p class="builder-error" id="import-error" hidden></p>
+    <div class="builder-dialog-actions">
+      <button type="button" class="btn" id="import-cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="import-go" disabled>Preview</button>
+    </div>
+  </form>
+</dialog>
+
 <script type="application/json" id="builder-data">{{ builder_data | tojson }}</script>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/generator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/generator-import.js') }}"></script>
 {% endblock %}
