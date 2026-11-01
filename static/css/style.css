@@ -528,7 +528,9 @@ h3 { font-size: 0.85rem; color: var(--muted); margin-top: 1.2em; }
 }
 .builder-card-head { grid-area: head; display: flex; justify-content: space-between; align-items: baseline; }
 .builder-label { font-size: 0.78rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.builder-head-right { display: flex; align-items: center; gap: 0.6rem; }
 .builder-count { font-size: 0.72rem; font-family: var(--mono); }
+.builder-card .copy-btn:disabled { opacity: 0.35; cursor: default; }
 .builder-select {
   grid-area: select;
   min-width: 0;

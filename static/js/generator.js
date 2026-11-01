@@ -81,7 +81,7 @@
     card.querySelector(".builder-count").textContent = cat.items.length + (cat.items.length === 1 ? " item" : " items");
     const current = itemById(cat, selected[cat.id]);
     preview.textContent = current ? current.text : "";
-    for (const btn of card.querySelectorAll('[data-action="random"],[data-action="edit"],[data-action="remove"]')) {
+    for (const btn of card.querySelectorAll('[data-action="random"],[data-action="edit"],[data-action="remove"],[data-action="copy"]')) {
       btn.disabled = empty;
     }
   }
@@ -94,7 +94,10 @@
       card.innerHTML =
         '<div class="builder-card-head">' +
           '<label class="builder-label" for="sel-' + cat.id + '"></label>' +
-          '<span class="builder-count muted"></span>' +
+          '<span class="builder-head-right">' +
+            '<span class="builder-count muted"></span>' +
+            '<button type="button" class="copy-btn copy-btn-small" data-action="copy" title="Copy this item" aria-label="Copy this item">Copy</button>' +
+          '</span>' +
         '</div>' +
         '<select class="builder-select" id="sel-' + cat.id + '"></select>' +
         '<p class="builder-preview"></p>' +
@@ -174,8 +177,14 @@
   async function copyText(text, btn) {
     let ok = false;
     try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {
-      outputEl.select();
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
       try { ok = document.execCommand("copy"); } catch (e2) { ok = false; }
+      document.body.removeChild(ta);
     }
     const original = btn.dataset.label || btn.textContent;
     btn.dataset.label = original;
@@ -208,6 +217,11 @@
       case "add": openDialog({ type: "add", cat }); break;
       case "edit": openDialog({ type: "edit", cat, item: itemById(cat, selected[cat.id]) }); break;
       case "remove": removeSelected(cat); break;
+      case "copy": {
+        const item = itemById(cat, selected[cat.id]);
+        if (item) copyText(item.text, btn);
+        break;
+      }
     }
   });
 
