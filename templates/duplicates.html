@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Duplicates - Nodebook{% endblock %}
+{% block content %}
+<div class="page-narrow-wide">
+  <h1>Duplicates</h1>
+  <p class="muted">Images that share identical file content. The earliest upload in each group is marked "keep" - the rest are pre-selected, so you can usually just hit Delete after a quick glance.</p>
+
+  <div id="selection-toolbar" class="selection-toolbar hidden">
+    <span id="selection-count" class="selection-count-badge">0</span>
+    <select id="move-target">
+      <option value="">Move to: Unfiled</option>
+      {% for f in folders %}
+      <option value="{{ f.id }}">Move to: {{ f.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="button" class="icon-btn" id="move-selected-btn" title="Move to selected folder">
+      <span class="icon-glyph">&#8594;</span>
+    </button>
+    <button type="button" class="icon-btn icon-btn-danger" id="delete-selected-btn" title="Delete selected">
+      <span class="icon-glyph">&#128465;</span>
+    </button>
+    <button type="button" class="icon-btn" id="clear-selection-btn" title="Clear selection">
+      <span class="icon-glyph">&#10005;</span>
+    </button>
+  </div>
+
+  {% if groups %}
+  {% for group in groups %}
+  <div class="dup-group">
+    <h3>Group of {{ group|length }}</h3>
+    <div class="image-grid dup-group-grid">
+      {% for img in group %}
+      <div class="image-card {{ 'dup-keep' if loop.first else '' }}" data-image-id="{{ img.id }}">
+        <label class="image-select-box">
+          <input type="checkbox" class="image-select-checkbox" data-image-id="{{ img.id }}" {{ '' if loop.first else 'checked' }}>
+        </label>
+        {% if loop.first %}<span class="badge badge-keep">keep</span>{% endif %}
+        <a class="image-card-link" href="{{ url_for('image_detail', image_id=img.id) }}">
+          <div class="image-card-thumb">
+            {% if img.thumbnail %}
+            <img src="{{ url_for('serve_thumbnail', filename=img.thumbnail) }}" alt="" loading="lazy">
+            {% else %}
+            <img src="{{ url_for('serve_upload', filename=img.filename) }}" alt="" loading="lazy">
+            {% endif %}
+            <button type="button" class="favorite-toggle {{ 'is-favorite' if img.is_favorite else '' }}" data-image-id="{{ img.id }}" title="{{ 'Unfavorite' if img.is_favorite else 'Favorite' }}">&#9829;</button>
+          </div>
+          <div class="image-card-body">
+            <p class="prompt-preview">{{ img.original_filename }}</p>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <p>No duplicates found.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gallery-manager.js') }}"></script>
+{% endblock %}

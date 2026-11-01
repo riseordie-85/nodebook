@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Mobile Setup - Nodebook{% endblock %}
+{% block content %}
+<div class="page-narrow-wide">
+  <h1>Mobile Setup</h1>
+  <p class="muted">Reference for setting up Nodebook on a phone or tablet - installing the app, and sharing images straight into Reference from your device's share sheet. The values below are live: if the API key is ever rotated, this page updates on its own.</p>
+
+  <div class="field-block">
+    <h2>Install the app</h2>
+    <p><strong>iOS:</strong> open this site in Safari, tap the Share button, then <strong>Add to Home Screen</strong>. Safari has no one-tap install option - this is the only path on iOS.</p>
+    <p><strong>Android (Chrome):</strong> open this site, and either wait for the install banner, or use the <strong>Install App</strong> button on the <a href="{{ url_for('login') }}">login page</a> if Chrome offers it. If it's already installed, neither will appear.</p>
+  </div>
+
+  <div class="field-block">
+    <h2>Key values</h2>
+    <p class="muted">Both setups below need these two things.</p>
+    <table class="settings-table">
+      <tbody>
+        <tr>
+          <td class="settings-label">Share-target URL</td>
+          <td class="settings-value">{{ share_target_url }}</td>
+          <td><button class="copy-btn copy-btn-small" data-copy-text="{{ share_target_url }}">Copy</button></td>
+        </tr>
+        <tr>
+          <td class="settings-label">Header</td>
+          <td class="settings-value">X-API-Key: {{ api_key }}</td>
+          <td><button class="copy-btn copy-btn-small" data-copy-text="{{ api_key }}">Copy key</button></td>
+        </tr>
+        <tr>
+          <td class="settings-label">Form field name</td>
+          <td class="settings-value">images</td>
+          <td><button class="copy-btn copy-btn-small" data-copy-text="images">Copy</button></td>
+        </tr>
+      </tbody>
+    </table>
+    {% if not api_key %}
+    <p class="notice">No API_KEY is set in this server's .env - the sharing shortcuts won't authenticate until one is added and the container is restarted.</p>
+    {% endif %}
+  </div>
+
+  <div class="field-block">
+    <h2>&#127918; iOS - Apple Shortcuts</h2>
+    <p class="muted">Uses the built-in Shortcuts app - no install needed.</p>
+    <ol>
+      <li>New shortcut &rarr; enable <strong>Show in Share Sheet</strong>, type <strong>Images</strong>.</li>
+      <li>Add <strong>Convert Image</strong> &rarr; JPEG (handles HEIC photos from Photos).</li>
+      <li>Add <strong>Get Contents of URL</strong> &rarr; POST to the share-target URL above.</li>
+      <li>Under Headers, add the X-API-Key header above. Under Request Body, choose <strong>Form</strong>, add a <strong>File</strong> field named <code>images</code>, and set its value to the <em>converted</em> image (the Convert Image step's output) - not the raw Shortcut Input.</li>
+      <li>Order matters: Convert Image must come <em>before</em> Get Contents of URL, or the file field will have nothing valid to reference.</li>
+    </ol>
+    <a class="btn" href="https://www.icloud.com/shortcuts/d69ae84a7e624524b1cc27cfc264afdd">Import the working shortcut</a>
+    <p class="muted small-note">This imports a copy of the confirmed-working shortcut directly - only needs the URL/key above if you ever rebuild it from scratch instead.</p>
+  </div>
+
+  <div class="field-block">
+    <h2>&#129302; Android - HTTP Shortcuts (Waboodoo)</h2>
+    <p class="muted">Third-party app (Play Store / F-Droid) - Android has no built-in equivalent.</p>
+    <ol>
+      <li>New shortcut, method <strong>POST</strong>, URL from above.</li>
+      <li>Add the X-API-Key header. <strong>Do not</strong> add a Content-Type header - form-data needs to set its own automatically.</li>
+      <li>Request Body Type &rarr; <strong>Parameters (form-data)</strong> &rarr; add a field, type <strong>File</strong>, name <code>images</code>. File Data Source can be left as "Open file picker" - it's only used for manual runs, not real shares.</li>
+      <li>Trigger &amp; Execution Settings &rarr; enable <strong>Allow receiving files from share dialog</strong>.</li>
+    </ol>
+    <div class="field-block-header">
+      <h3 style="margin:0;">Equivalent curl command</h3>
+      <button class="copy-btn" data-copy-text="curl {{ share_target_url }} -X POST -H &quot;X-API-Key: {{ api_key }}&quot; -F images=@file">Copy</button>
+    </div>
+    <p class="prompt-text">curl {{ share_target_url }} -X POST -H "X-API-Key: {{ api_key }}" -F images=@file</p>
+  </div>
+
+  <div class="field-block">
+    <h2>Backing up a shortcut</h2>
+    <p><strong>HTTP Shortcuts:</strong> main menu &rarr; Import/Export &rarr; Export &rarr; save the .zip somewhere durable (email to yourself, Drive) - not just on the phone.</p>
+    <p><strong>Apple Shortcuts:</strong> long-press the shortcut &rarr; Share &rarr; Save to Files (pick iCloud Drive), and/or Copy iCloud Link for quick reimporting on another device.</p>
+    <p class="notice">Both backups contain your real API key. Keep them private - don't post either one anywhere public.</p>
+  </div>
+</div>
+{% endblock %}

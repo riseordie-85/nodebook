@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ image.display_name or image.original_filename }} - Nodebook{% endblock %}
+{% block content %}
+<div class="detail-nav">
+  <a class="{{ 'btn' if prev_id else 'btn btn-disabled' }}"
+     href="{{ url_for('reference_image_detail', image_id=prev_id, folder=folder_param, sort=sort_key) if prev_id else '#' }}"
+     {{ 'tabindex="-1" aria-disabled="true"' if not prev_id else '' }}>&larr; Previous</a>
+  <a href="{{ url_for('reference_gallery', folder=folder_param, sort=sort_key) if folder_param else url_for('reference_gallery', sort=sort_key) }}" class="text-link">Back to Reference</a>
+  <a class="{{ 'btn' if next_id else 'btn btn-disabled' }}"
+     href="{{ url_for('reference_image_detail', image_id=next_id, folder=folder_param, sort=sort_key) if next_id else '#' }}"
+     {{ 'tabindex="-1" aria-disabled="true"' if not next_id else '' }}>Next &rarr;</a>
+</div>
+<div class="detail-layout">
+  <div class="detail-image">
+    <img src="{{ url_for('serve_reference_upload', filename=image.filename) }}" alt="{{ image.display_name or image.original_filename }}">
+    <div class="detail-image-actions">
+      <a class="btn" href="{{ url_for('serve_reference_upload', filename=image.filename) }}" download="{{ image.original_filename }}">Download image</a>
+      <form method="post" action="{{ url_for('reference_delete_image', image_id=image.id) }}" onsubmit="return confirm('Delete this image? This can\'t be undone.');">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="detail-info">
+    <div class="field-block">
+      <h2>Name</h2>
+      <form method="post" action="{{ url_for('reference_rename_image', image_id=image.id) }}" class="inline-form">
+        <input type="text" name="display_name" value="{{ image.display_name or '' }}" placeholder="{{ image.original_filename }}">
+        <button type="submit" class="btn">Save</button>
+      </form>
+      <p class="muted small-note">Original filename: {{ image.original_filename }}</p>
+    </div>
+
+    <div class="field-block">
+      <h2>Folder</h2>
+      <form method="post" action="{{ url_for('reference_update_image_folders', image_id=image.id) }}">
+        {% if all_folders %}
+        <select name="folder_ids" class="folder-select">
+          <option value="">— Unfiled (All images) —</option>
+          {% for f in all_folders %}
+          <option value="{{ f.id }}" {{ 'selected' if f.id in assigned_folder_ids else '' }}>{{ f.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn">Save</button>
+        {% else %}
+        <p class="muted">No folders yet. <a href="{{ url_for('reference_folders') }}">Create one</a>.</p>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === 'ArrowLeft') {
+    const link = document.querySelector('.detail-nav .btn:not(.btn-disabled):first-child');
+    if (link) window.location = link.href;
+  } else if (e.key === 'ArrowRight') {
+    const link = document.querySelector('.detail-nav .btn:not(.btn-disabled):last-child');
+    if (link) window.location = link.href;
+  }
+});
+</script>
+<script src="{{ url_for('static', filename='js/swipe-nav.js') }}"></script>
+{% endblock %}

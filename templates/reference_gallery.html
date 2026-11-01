@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Reference - Nodebook{% endblock %}
+{% block content %}
+<div class="gallery-controls-sticky">
+  <div class="controls-bar">
+    <select id="folder-select" class="folder-select">
+      <option value="" {{ 'selected' if view_mode == 'unfiled' else '' }}>Unfiled</option>
+      <option value="all" {{ 'selected' if view_mode == 'all' else '' }}>All images</option>
+      {% for f in folders %}
+      <option value="{{ f.id }}" {{ 'selected' if current_folder and current_folder.id == f.id else '' }}>{{ f.name }}{{ ' \u2605' if f.pinned else '' }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="button" id="sort-toggle" class="icon-btn" data-sort="{{ sort_key }}" title="{{ 'Oldest saved first - click to reverse' if sort_key == 'old_saved' else 'Newest saved first - click to reverse' }}">
+      <span class="icon-glyph">{{ '\u2191' if sort_key == 'old_saved' else '\u2193' }}</span>
+      <span class="icon-btn-label">{{ 'Oldest' if sort_key == 'old_saved' else 'Newest' }}</span>
+    </button>
+
+    <button type="button" id="grid-density-toggle" class="icon-btn" title="Thumbnail size">
+      <span class="icon-glyph">&#9642;&#9642;</span>
+      <span class="icon-btn-label">Medium</span>
+    </button>
+
+    <button type="button" id="toggle-select-mode" class="icon-btn" title="Select images">
+      <span class="icon-glyph">&#9745;</span>
+      <span class="icon-btn-label">Select</span>
+    </button>
+
+    <a href="{{ url_for('reference_upload') }}" class="icon-btn" title="Upload images">
+      <span class="icon-glyph">&#11014;</span>
+      <span class="icon-btn-label">Upload</span>
+    </a>
+  </div>
+
+  <div id="selection-toolbar" class="selection-toolbar hidden">
+    <span id="selection-count" class="selection-count-badge">0</span>
+    <select id="move-target">
+      <option value="">Move to: Unfiled</option>
+      {% for f in folders %}
+      <option value="{{ f.id }}">Move to: {{ f.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="button" class="icon-btn" id="move-selected-btn" title="Move to selected folder">
+      <span class="icon-glyph">&#8594;</span>
+    </button>
+    <button type="button" class="icon-btn icon-btn-danger" id="delete-selected-btn" title="Delete selected">
+      <span class="icon-glyph">&#128465;</span>
+    </button>
+    <button type="button" class="icon-btn" id="clear-selection-btn" title="Clear selection">
+      <span class="icon-glyph">&#10005;</span>
+    </button>
+  </div>
+</div>
+
+{% if images %}
+<div class="image-grid cols-2" id="image-grid">
+  {% for img in images %}
+  <div class="image-card" data-image-id="{{ img.id }}">
+    <label class="image-select-box">
+      <input type="checkbox" class="image-select-checkbox" data-image-id="{{ img.id }}">
+    </label>
+    <a class="image-card-link" href="{{ url_for('reference_image_detail', image_id=img.id, folder=('all' if view_mode == 'all' else (current_folder.id if current_folder else None)), sort=sort_key) }}">
+      <div class="image-card-thumb">
+        {% if img.thumbnail %}
+        <img src="{{ url_for('serve_reference_thumbnail', filename=img.thumbnail) }}" alt="" loading="lazy">
+        {% else %}
+        <img src="{{ url_for('serve_reference_upload', filename=img.filename) }}" alt="" loading="lazy">
+        {% endif %}
+        <button type="button" class="favorite-toggle {{ 'is-favorite' if img.is_favorite else '' }}" data-image-id="{{ img.id }}" title="{{ 'Unfavorite' if img.is_favorite else 'Favorite' }}">&#9829;</button>
+      </div>
+      <div class="image-card-body">
+        <p class="prompt-preview">{{ img.display_name or img.original_filename }}</p>
+      </div>
+    </a>
+    <button type="button" class="image-rename-btn" data-image-id="{{ img.id }}" data-current-name="{{ img.display_name or img.original_filename }}" title="Rename">&#9998;</button>
+  </div>
+  {% endfor %}
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+  <a class="btn {{ 'btn-disabled' if page <= 1 else '' }}" href="{{ url_for('reference_gallery') }}?page={{ page - 1 }}{{ folder_qs }}">&larr; Newer</a>
+  <span class="pagination-status">Page {{ page }} of {{ total_pages }} ({{ total }} images)</span>
+  <a class="btn {{ 'btn-disabled' if page >= total_pages else '' }}" href="{{ url_for('reference_gallery') }}?page={{ page + 1 }}{{ folder_qs }}">Older &rarr;</a>
+</div>
+{% endif %}
+{% else %}
+<div class="empty-state">
+  {% if view_mode == 'unfiled' %}
+  <p>Nothing unfiled - everything's organized into a folder.</p>
+  <a class="btn" href="{{ url_for('reference_gallery', folder='all') }}">View all images</a>
+  {% else %}
+  <p>No reference images here yet.</p>
+  <a class="btn" href="{{ url_for('reference_upload') }}">Upload your first image</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.galleryConfig = {
+    moveUrl: "{{ url_for('api_move_reference_images') }}",
+    deleteUrl: "{{ url_for('api_delete_reference_images') }}",
+    favoriteUrlBase: "/api/reference/images/",
+    imageRenameUrlBase: "/api/reference/images/",
+  };
+</script>
+<script src="{{ url_for('static', filename='js/gallery-manager.js') }}"></script>
+{% endblock %}

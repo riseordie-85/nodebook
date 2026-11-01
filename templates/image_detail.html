@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ image.original_filename }} - Nodebook{% endblock %}
+{% block content %}
+<div class="detail-nav">
+  <a class="{{ 'btn' if prev_id else 'btn btn-disabled' }}"
+     href="{{ url_for('image_detail', image_id=prev_id, folder=folder_param, sort=sort_key) if prev_id else '#' }}"
+     {{ 'tabindex="-1" aria-disabled="true"' if not prev_id else '' }}>&larr; Previous</a>
+  <a href="{{ url_for('gallery', folder=folder_param, sort=sort_key) if folder_param else url_for('gallery', sort=sort_key) }}" class="text-link">Back to gallery</a>
+  <a class="{{ 'btn' if next_id else 'btn btn-disabled' }}"
+     href="{{ url_for('image_detail', image_id=next_id, folder=folder_param, sort=sort_key) if next_id else '#' }}"
+     {{ 'tabindex="-1" aria-disabled="true"' if not next_id else '' }}>Next &rarr;</a>
+</div>
+<div class="detail-layout">
+  <div class="detail-image">
+    <img src="{{ url_for('serve_upload', filename=image.filename) }}" alt="{{ image.original_filename }}">
+    <div class="detail-image-actions">
+      <a class="btn" href="{{ url_for('serve_upload', filename=image.filename) }}" download="{{ image.original_filename }}">Download image</a>
+      <form method="post" action="{{ url_for('delete_image', image_id=image.id) }}" onsubmit="return confirm('Delete this image? This can\'t be undone.');">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="detail-info">
+    {% if not image.has_metadata %}
+    <div class="notice">No ComfyUI metadata was found in this file - it may have been resaved or edited by another tool.</div>
+    {% endif %}
+
+    <div class="field-block">
+      <div class="field-block-header">
+        <h2>Positive prompt</h2>
+        <button class="copy-btn" data-copy-text="{{ image.positive_prompt or '' }}">Copy</button>
+      </div>
+      <p class="prompt-text">{{ image.positive_prompt or '—' }}</p>
+    </div>
+
+    <div class="field-block field-block-negative">
+      <div class="field-block-header">
+        <h2>Negative prompt</h2>
+        <button class="copy-btn" data-copy-text="{{ image.negative_prompt or '' }}">Copy</button>
+      </div>
+      <p class="prompt-text">{{ image.negative_prompt or '—' }}</p>
+    </div>
+
+    <div class="field-block">
+      <h2>Settings</h2>
+      <table class="settings-table">
+        <tbody>
+          {% set settings = [
+            ('Model', image.model_name),
+            ('Sampler', image.sampler_name),
+            ('Scheduler', image.scheduler),
+            ('Seed', image.seed),
+            ('Steps', image.steps),
+            ('CFG', image.cfg),
+            ('Denoise', image.denoise),
+            ('Size', (image.width ~ ' x ' ~ image.height) if image.width and image.height else None),
+          ] %}
+          {% for label, value in settings %}
+          {% if value %}
+          <tr>
+            <td class="settings-label">{{ label }}</td>
+            <td class="settings-value">{{ value }}</td>
+            <td><button class="copy-btn copy-btn-small" data-copy-text="{{ value }}">Copy</button></td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if loras %}
+      <h3>LoRAs</h3>
+      <table class="settings-table">
+        <tbody>
+          {% for lora in loras %}
+          <tr>
+            <td class="settings-label">{{ lora.name }}</td>
+            <td class="settings-value">{% if lora.strength_model is none %}weight not recorded{% else %}model {{ lora.strength_model }} / clip {{ lora.strength_clip }}{% endif %}</td>
+            <td><button class="copy-btn copy-btn-small" data-copy-text="{{ lora.name }}">Copy</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+
+    {% if image.workflow_json or image.prompt_json %}
+    <div class="field-block">
+      <h2>Full workflow</h2>
+      <p class="muted">The entire ComfyUI node graph, exactly as embedded in the file. Load it back into ComfyUI to continue from here.</p>
+      <div class="workflow-actions">
+        <button class="btn" id="copy-workflow-btn" data-copy-text="{{ (image.workflow_json or image.prompt_json or '') | e }}">Copy full workflow</button>
+        <a class="btn" href="{{ url_for('download_workflow', image_id=image.id) }}">Download workflow.json</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="field-block">
+      <h2>Folder</h2>
+      <form method="post" action="{{ url_for('update_image_folders', image_id=image.id) }}">
+        {% if all_folders %}
+        <select name="folder_ids" class="folder-select">
+          <option value="">— Unfiled (All images) —</option>
+          {% for f in all_folders %}
+          <option value="{{ f.id }}" {{ 'selected' if f.id in assigned_folder_ids else '' }}>{{ f.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn">Save</button>
+        {% else %}
+        <p class="muted">No folders yet. <a href="{{ url_for('folders') }}">Create one</a>.</p>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === 'ArrowLeft') {
+    const link = document.querySelector('.detail-nav .btn:not(.btn-disabled):first-child');
+    if (link) window.location = link.href;
+  } else if (e.key === 'ArrowRight') {
+    const link = document.querySelector('.detail-nav .btn:not(.btn-disabled):last-child');
+    if (link) window.location = link.href;
+  }
+});
+</script>
+<script src="{{ url_for('static', filename='js/swipe-nav.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,22 @@
+# Runtime data - lives on the external drive via volume mounts, never
+# belongs inside the image itself. This is the fix for builds that were
+# slowly baking the entire photo library into every image rebuild.
+data/
+uploads/*
+thumbnails/*
+reference_uploads/*
+reference_thumbnails/*
+instance/*.db
+!uploads/.gitkeep
+!thumbnails/.gitkeep
+!reference_uploads/.gitkeep
+!reference_thumbnails/.gitkeep
+!instance/.gitkeep
+
+# Standard excludes
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+server.log

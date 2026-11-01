@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Generator - Nodebook{% endblock %}
+{% block content %}
+<div class="page-narrow builder-page">
+  <h1>Prompt builder</h1>
+  <p class="muted">Pick one item from each category, or randomize. Use <strong>+</strong>, <strong>&#9998;</strong> and <strong>&times;</strong> on a category to add, edit or remove its items. Changes are saved to Nodebook.</p>
+
+  <div class="builder-toolbar">
+    <button class="btn btn-primary" id="randomize-all-btn" type="button">&#127922; Randomize all</button>
+    <button class="btn" id="copy-top-btn" type="button">Copy prompt</button>
+  </div>
+
+  <div id="builder-cards" class="builder-cards"></div>
+
+  <div class="field-block">
+    <div class="field-block-header">
+      <h2>Built prompt</h2>
+      <button class="copy-btn" id="copy-full-btn" type="button">Copy</button>
+    </div>
+    <textarea id="built-prompt" class="assembled-textarea" rows="10"></textarea>
+    <p class="muted small-note">Rebuilt whenever you change a selection. You can edit the text here before copying; your edits are replaced the next time a selection changes.</p>
+  </div>
+</div>
+
+<dialog id="item-dialog" class="builder-dialog">
+  <form method="dialog" id="item-form">
+    <h2 id="item-dialog-title">Add item</h2>
+    <textarea id="item-text" rows="5" required></textarea>
+    <p class="builder-error" id="item-error" hidden></p>
+    <div class="builder-dialog-actions">
+      <button type="button" class="btn" id="item-cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="item-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="application/json" id="builder-data">{{ builder_data | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/generator.js') }}"></script>
+{% endblock %}

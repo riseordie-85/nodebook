@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+instance/*.db
+uploads/*
+thumbnails/*
+reference_uploads/*
+reference_thumbnails/*
+data/
+!uploads/.gitkeep
+!thumbnails/.gitkeep
+!reference_uploads/.gitkeep
+!reference_thumbnails/.gitkeep

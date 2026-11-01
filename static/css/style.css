@@ -1,0 +1,680 @@
+:root {
+  /* Colors sampled directly from the Nodebook logo/icon, rather than
+     eyeballed: near-black neutral background, neutral (not blue-tinted)
+     grays for surfaces, and the exact glowing-node amber for the accent. */
+  --bg: #141416;
+  --surface: #202022;
+  --surface-alt: #2c2c2e;
+  --border: #3a3a3d;
+  --text: #eae8e5;
+  --muted: #86868a;
+  --accent: #f1b043;
+  --accent-hover: #f5c169;
+  --negative: #a85b44;
+  --danger: #c0524a;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; margin: 0 0 0.6em; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1rem; color: var(--text); }
+h3 { font-size: 0.85rem; color: var(--muted); margin-top: 1.2em; }
+.muted { color: var(--muted); }
+
+/* ---------- Top bar ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0 1.5rem;
+  height: 3.5rem;
+  box-sizing: border-box;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(3.5rem + env(safe-area-inset-top, 0px));
+}
+.topbar .brand {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+.brand-logo { height: 1.9rem; width: auto; display: block; }
+.topbar nav { display: flex; gap: 1.3rem; flex: 1; }
+.topbar nav a { color: var(--muted); font-size: 0.9rem; padding: 0.4rem 0; }
+.topbar nav a.active, .topbar nav a:hover { color: var(--text); }
+.topbar .logout { color: var(--muted); font-size: 0.85rem; }
+.nav-toggle { display: none; }
+.nav-logout-mobile { display: none; }
+.nav-icon { display: none; } /* icon-grid is mobile-only - see the media query below */
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+/* ---------- Flash messages ---------- */
+.flash-stack { margin-bottom: 1.2rem; }
+.flash {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.88rem;
+  border-radius: 2px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-family: var(--sans);
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap; /* a squeezed flex row should wrap to a new line, never wrap a button's own label mid-word */
+}
+.btn:hover { border-color: var(--accent); color: var(--text); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #1a1408; font-weight: 500; }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-danger { background: transparent; border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+.btn-text-danger { background: none; border: none; color: var(--danger); font-size: 0.82rem; cursor: pointer; padding: 0; }
+
+.copy-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+.copy-btn-small { padding: 0.15rem 0.5rem; font-size: 0.7rem; }
+
+/* ---------- Login ---------- */
+.login-screen { display: flex; flex-direction: column; align-items: center; padding-top: 8vh; gap: 1rem; }
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2.2rem;
+  width: 320px;
+  border-radius: 4px;
+  text-align: center;
+}
+.login-card h1 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.login-logo { height: 2.6rem; width: auto; margin-bottom: 0.8rem; }
+.install-banner {
+  width: 320px;
+  box-sizing: border-box;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.2rem;
+  text-align: center;
+}
+.install-banner p { margin: 0 0 0.7rem; font-size: 0.85rem; color: var(--muted); }
+.install-banner:has(#install-banner-ios:not(.hidden)) p { margin-bottom: 0; }
+.install-banner .btn { width: 100%; }
+.login-card input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  margin: 1rem 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--sans);
+}
+.login-card button {
+  width: 100%;
+  padding: 0.6rem;
+  background: var(--accent);
+  border: none;
+  border-radius: 3px;
+  color: #1a1408;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* ---------- Gallery ---------- */
+.gallery-layout { display: grid; grid-template-columns: 200px 1fr; gap: 2.5rem; align-items: start; }
+.hidden { display: none !important; }
+
+.text-link { font-size: 0.82rem; color: var(--muted); border-bottom: 1px dotted var(--border); background: none; cursor: pointer; padding: 0; display: inline-block; }
+.btn-text { background: none; border: none; color: var(--muted); font-size: 0.85rem; cursor: pointer; text-decoration: underline; }
+
+.pin-btn, .folder-rename-btn-standalone {
+  background: none; border: none; cursor: pointer; padding: 0.2rem 0.35rem;
+  color: var(--border); font-size: 0.9rem; line-height: 1;
+}
+.pin-btn:hover, .folder-rename-btn-standalone:hover { color: var(--accent); }
+.pin-btn.pinned { color: var(--accent); }
+
+/* Unified controls bar: the same markup drives Gallery and Reference, and
+   both breakpoints - only the icon labels' visibility differs (hidden on
+   mobile via the media query below, shown on desktop here). */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.folder-select {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 0.9rem;
+  font-family: var(--sans);
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: var(--sans);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.icon-btn:hover { border-color: var(--accent); }
+.icon-btn.active { background: var(--accent); border-color: var(--accent); color: #1a1408; }
+.icon-btn-label { font-size: 0.85rem; }
+.icon-glyph { font-size: 1.05rem; line-height: 1; }
+
+.gallery-controls-sticky {
+  position: sticky;
+  top: 3.5rem;
+  /* .wrap has its own 2rem top padding, which stacks with this element's
+     own padding-top below - margin-top cancels that contribution so the
+     gap is governed by ONE value (padding-top) whether the page is
+     scrolled or not, instead of the two stacking to 4rem before any
+     scrolling has happened. */
+  margin-top: -2rem;
+  padding-top: 0.6rem;
+  z-index: 50;
+  background: var(--bg);
+  padding-bottom: 0.4rem;
+}
+
+.image-grid.select-mode-active .image-card-link { cursor: pointer; }
+.image-grid.select-mode-active .image-card { user-select: none; }
+
+.selection-toolbar {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  background: var(--surface-alt); border: 1px solid var(--accent);
+  border-radius: 4px; padding: 0.6rem 0.9rem; margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+.selection-toolbar select {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  padding: 0.35rem 0.6rem; border-radius: 3px; font-family: var(--sans); font-size: 0.85rem;
+  flex: 0 1 130px; min-width: 0; text-overflow: ellipsis;
+}
+.selection-count-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.6rem; height: 1.6rem; padding: 0 0.4rem;
+  border-radius: 50%; background: var(--accent); color: #1a1408;
+  font-size: 0.8rem; font-weight: 600; flex-shrink: 0;
+}
+.icon-btn-danger { border-color: var(--danger); color: var(--danger); }
+.icon-btn-danger:hover { background: var(--danger); color: #fff; }
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1.1rem;
+}
+.image-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  color: var(--text);
+  -webkit-touch-callout: none; /* suppresses iOS Safari's own long-press "save/copy image" menu */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.image-card:hover, .image-card.selected { border-color: var(--accent); }
+.image-card.selected { box-shadow: 0 0 0 1px var(--accent); }
+.image-card-link { display: block; color: inherit; }
+.image-select-box {
+  position: absolute; top: 0.4rem; left: 0.4rem; z-index: 2;
+  width: 1.2rem; height: 1.2rem; cursor: pointer;
+}
+.image-select-checkbox { accent-color: var(--accent); width: 1.1rem; height: 1.1rem; cursor: pointer; }
+.favorite-toggle {
+  position: absolute; bottom: 0.4rem; right: 0.4rem; z-index: 2;
+  background: rgba(0,0,0,0.45); border: none; border-radius: 3px;
+  color: rgba(255,255,255,0.85); font-size: 0.95rem; line-height: 1;
+  padding: 0.2rem 0.35rem; cursor: pointer;
+}
+.favorite-toggle:hover { color: #fff; }
+.favorite-toggle.is-favorite { color: #e0455f; }
+.image-rename-btn {
+  position: absolute; top: 0.4rem; right: 0.4rem; z-index: 2;
+  background: rgba(0,0,0,0.45); border: none; border-radius: 3px;
+  color: rgba(255,255,255,0.85); font-size: 0.8rem; line-height: 1;
+  padding: 0.25rem 0.4rem; cursor: pointer;
+}
+.image-rename-btn:hover { color: #fff; }
+.image-card-thumb { position: relative; aspect-ratio: 1; background: var(--bg); }
+.image-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.badge {
+  position: absolute; top: 0.4rem; right: 0.4rem;
+  font-size: 0.65rem; font-family: var(--mono);
+  padding: 0.15rem 0.4rem; border-radius: 2px;
+}
+.badge-warn { background: rgba(192,82,74,0.85); color: #fff; }
+.badge-keep { background: var(--accent); color: #1a1408; }
+
+/* Grid density: a direct column-count control (1/2/3), replacing the old
+   grid/list view toggle - same control, same persistence, on both
+   galleries and both breakpoints now. */
+/* Density is a thumbnail SIZE preset (auto-fill + minmax), not a literal
+   column count - the same setting naturally yields ~1/2/3 columns on a
+   phone-width screen, but fills a wide desktop screen with proportionally
+   more thumbnails instead of just 1-3 oversized ones with empty space
+   around them. Values tuned against a ~390px phone viewport and this
+   app's 1.5rem page padding + 1.1rem grid gap. */
+.image-grid.cols-1 { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.image-grid.cols-2 { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.image-grid.cols-3 { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+.dup-group { margin-bottom: 2rem; }
+.dup-group h3 { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.6rem; font-weight: 500; }
+.image-card.dup-keep { border-color: var(--accent); }
+.image-card-body { padding: 0.6rem 0.7rem; }
+.prompt-preview {
+  font-size: 0.8rem; color: var(--muted);
+  margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+.pagination-status { font-size: 0.85rem; color: var(--muted); }
+
+.quick-move-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 200; display: flex; align-items: flex-end;
+}
+.quick-move-menu {
+  background: var(--surface); border-top: 1px solid var(--border);
+  border-radius: 12px 12px 0 0; width: 100%;
+  max-height: 60vh; overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+  display: flex; flex-direction: column;
+}
+.quick-move-item, .quick-move-cancel {
+  background: none; border: none; text-align: left;
+  color: var(--text); font-size: 1rem; font-family: var(--sans);
+  padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.quick-move-cancel { color: var(--muted); font-weight: 500; border-bottom: none; margin-top: 0.3rem; }
+.quick-move-item-danger { color: var(--danger); }
+
+.empty-state {
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---------- Notes ---------- */
+.notes-heading { margin: 0; font-size: 1.3rem; flex: 1; }
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.note-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.note-card-link { display: block; flex: 1; padding: 0.9rem 1rem; color: inherit; text-decoration: none; }
+.note-card-title {
+  margin: 0 0 0.4rem; font-size: 1rem; overflow-wrap: break-word;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.note-pin-indicator { color: var(--accent); font-size: 0.8rem; flex-shrink: 0; }
+.note-card-preview {
+  margin: 0; font-size: 0.85rem; color: var(--muted); line-height: 1.45;
+  overflow-wrap: break-word; white-space: pre-wrap;
+}
+.note-card-actions {
+  display: flex; gap: 0.3rem; padding: 0.4rem 0.7rem;
+  border-top: 1px solid var(--border);
+}
+.note-pin-btn, .note-duplicate-btn, .note-delete-btn {
+  background: none; border: none; cursor: pointer; border-radius: 3px;
+  padding: 0.3rem 0.5rem; color: var(--border); font-size: 0.95rem;
+}
+.note-pin-btn:hover, .note-duplicate-btn:hover { color: var(--accent); }
+.note-pin-btn.active { color: var(--accent); }
+.note-delete-btn:hover { color: var(--danger); }
+
+.note-save-status { margin-left: auto; font-size: 0.8rem; color: var(--muted); align-self: center; }
+.note-title-input {
+  width: 100%; background: none; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-size: 1.3rem; font-weight: 600; font-family: var(--sans);
+  padding: 0.6rem 0; margin-bottom: 0.8rem;
+}
+.note-title-input:focus { outline: none; border-bottom-color: var(--accent); }
+.note-content-input {
+  width: 100%; min-height: 50vh; background: none; border: none; color: var(--text);
+  font-size: 0.95rem; line-height: 1.6; font-family: var(--sans); resize: vertical; padding: 0;
+}
+.note-content-input:focus { outline: none; }
+
+/* ---------- Upload ---------- */
+.page-narrow { max-width: 620px; }
+.page-narrow-wide { max-width: 780px; }
+.dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  margin: 1.2rem 0;
+  text-align: center;
+  padding: 1rem;
+}
+.dropzone.drag-active { border-color: var(--accent); color: var(--accent); }
+.dropzone input { display: none; }
+
+/* ---------- Image detail ---------- */
+.detail-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+.btn-disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 2rem; align-items: start; }
+.detail-image img { width: 100%; border-radius: 4px; border: 1px solid var(--border); display: block; }
+.detail-image-actions { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
+
+.notice {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--negative);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 1.2rem;
+  border-radius: 2px;
+}
+
+.field-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.field-block-negative { border-left: 3px solid var(--negative); }
+.field-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+.field-block-header h2 { margin: 0; }
+.prompt-text { font-size: 0.92rem; line-height: 1.55; margin: 0; white-space: pre-wrap; overflow-wrap: break-word; word-break: break-word; }
+
+.settings-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; }
+.settings-table td { padding: 0.35rem 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.settings-table tr:last-child td { border-bottom: none; }
+.settings-label { color: var(--muted); width: 30%; overflow-wrap: break-word; }
+.settings-value { font-family: var(--mono); overflow-wrap: break-word; word-break: break-word; }
+.settings-table td:last-child { text-align: right; width: 54px; white-space: nowrap; }
+
+.folder-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  border-radius: 3px;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  margin-right: 0.6rem;
+}
+
+.workflow-actions { display: flex; gap: 0.6rem; margin-top: 0.6rem; }
+
+.folder-checkboxes { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.8rem; }
+.checkbox-pill {
+  display: flex; align-items: center; gap: 0.4rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.checkbox-pill input { accent-color: var(--accent); }
+
+/* ---------- Prompt builder (Generator) ---------- */
+.btn-icon {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 3px;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.btn-icon:hover:not(:disabled) { border-color: var(--accent); }
+.btn-icon:disabled { opacity: 0.35; cursor: default; }
+.btn-icon-danger { color: var(--danger); }
+.btn-icon-danger:hover:not(:disabled) { border-color: var(--danger); background: var(--danger); color: #fff; }
+
+.builder-toolbar { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1.2rem 0; }
+.builder-cards { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.2rem; }
+.builder-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "head head" "select actions" "preview preview";
+  gap: 0.45rem 0.6rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.7rem 0.9rem;
+}
+.builder-card-head { grid-area: head; display: flex; justify-content: space-between; align-items: baseline; }
+.builder-label { font-size: 0.78rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.builder-count { font-size: 0.72rem; font-family: var(--mono); }
+.builder-select {
+  grid-area: select;
+  min-width: 0;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.45rem 0.6rem;
+  border-radius: 3px;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+}
+.builder-select:focus { outline: none; border-color: var(--accent); }
+.builder-actions { grid-area: actions; display: flex; gap: 0.3rem; }
+.builder-preview { grid-area: preview; margin: 0; font-size: 0.8rem; line-height: 1.45; color: var(--muted); overflow-wrap: break-word; }
+.builder-preview:empty { display: none; }
+
+.assembled-textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 0.7rem;
+  border-radius: 3px;
+  resize: vertical;
+}
+.small-note { font-size: 0.78rem; margin-top: 0.6rem; margin-bottom: 0; }
+
+.builder-dialog {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.1rem 1.2rem;
+  width: min(520px, calc(100vw - 2rem));
+}
+.builder-dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+.builder-dialog h2 { margin: 0 0 0.7rem; font-size: 1rem; }
+.builder-dialog textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 0.6rem;
+  border-radius: 3px;
+  resize: vertical;
+}
+.builder-dialog textarea:focus { outline: none; border-color: var(--accent); }
+.builder-dialog-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.8rem; }
+.builder-error { color: var(--danger); font-size: 0.82rem; margin: 0.5rem 0 0; }
+
+/* ---------- Folders page ---------- */
+.inline-form { display: flex; gap: 0.6rem; margin: 1.2rem 0 1.8rem; }
+.inline-form input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.7rem;
+  border-radius: 3px;
+  font-family: var(--sans);
+}
+.inline-form input[name="name"] { flex: 1; }
+.inline-form input[name="description"] { flex: 2; }
+
+.folder-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.folder-table th {
+  text-align: left; color: var(--muted); font-weight: 500;
+  padding: 0.5rem 0.4rem; border-bottom: 1px solid var(--border); font-size: 0.78rem;
+}
+.folder-table td { padding: 0.6rem 0.4rem; border-bottom: 1px solid var(--border); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 780px) {
+  .detail-layout { grid-template-columns: 1fr; }
+
+  /* Icon-only on mobile - labels reappear on desktop (see the base
+     .icon-btn-label rule above, which is visible by default). */
+  .icon-btn-label { display: none; }
+  .controls-bar { margin-bottom: 0.7rem; }
+
+  /* Hamburger menu replaces the flat nav row */
+  .nav-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 2rem;
+    height: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .nav-toggle span { display: block; width: 100%; height: 2px; background: var(--text); border-radius: 1px; }
+  .topbar .brand { flex: 1; }
+  .topbar nav {
+    display: none;
+    position: fixed;
+    top: calc(3.5rem + env(safe-area-inset-top, 0px));
+    left: 0; right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.8rem 1rem 1rem;
+    z-index: 99;
+  }
+  /* A 3x3 icon grid instead of a flat list of links - order values below
+     place each link into its intended cell regardless of its position in
+     the underlying HTML (which stays in a sensible, unrelated document
+     order so desktop's plain link row isn't affected by any of this). */
+  .topbar nav.open { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
+  .topbar nav a {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.35rem; padding: 1rem 0.3rem; font-size: 0.78rem; text-align: center;
+    border-radius: 6px;
+  }
+  .topbar nav a.active, .topbar nav a:hover { background: var(--surface-alt); }
+  .nav-icon { display: block; font-size: 1.6rem; line-height: 1; }
+
+  .nav-g1 { order: 1; } .nav-g2 { order: 2; } .nav-g3 { order: 3; }
+  .nav-g4 { order: 4; } .nav-g5 { order: 5; } .nav-g6 { order: 6; }
+  .nav-g7 { order: 7; } .nav-g8 { order: 8; } .nav-g9 { order: 9; }
+  .topbar nav a.nav-hide-mobile { display: none; } /* Duplicates - still reachable on desktop, just not part of this grid. Needs this exact selector (not just .nav-hide-mobile alone) to out-specificity the .topbar nav a rule above, which also sets display and would otherwise win regardless of source order. */
+
+  .topbar .logout { display: none; }
+  .nav-logout-mobile {
+    display: block;
+    grid-column: 1 / -1;
+    order: 10;
+    color: var(--danger);
+    text-align: center;
+    padding: 0.9rem 0 0.2rem;
+    margin-top: 0.3rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Bigger touch targets for finger navigation */
+  .image-select-box { width: 1.6rem; height: 1.6rem; top: 0.5rem; left: 0.5rem; }
+  .image-select-checkbox { width: 1.5rem; height: 1.5rem; }
+  .favorite-toggle, .image-rename-btn { font-size: 1.1rem; padding: 0.4rem 0.55rem; }
+  .pin-btn, .folder-rename-btn-standalone { font-size: 1.1rem; padding: 0.4rem 0.55rem; }
+  .btn { padding: 0.65rem 1.1rem; }
+}

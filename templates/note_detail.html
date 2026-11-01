@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ note.title or 'Note' }} - Nodebook{% endblock %}
+{% block content %}
+<div class="controls-bar">
+  <a href="{{ url_for('notes') }}" class="text-link">&larr; Notes</a>
+  <span id="note-save-status" class="note-save-status"></span>
+  <button type="button" id="note-pin-btn" class="icon-btn {{ 'active' if note.pinned else '' }}" data-note-id="{{ note.id }}" title="{{ 'Unpin' if note.pinned else 'Pin' }}">
+    <span class="icon-glyph">&#9733;</span>
+    <span class="icon-btn-label">{{ 'Pinned' if note.pinned else 'Pin' }}</span>
+  </button>
+  <button type="button" id="note-duplicate-btn" class="icon-btn" data-note-id="{{ note.id }}" title="Duplicate">
+    <span class="icon-glyph">&#10697;</span>
+    <span class="icon-btn-label">Duplicate</span>
+  </button>
+  <button type="button" id="note-delete-btn" class="icon-btn icon-btn-danger" data-note-id="{{ note.id }}" title="Delete">
+    <span class="icon-glyph">&#128465;</span>
+    <span class="icon-btn-label">Delete</span>
+  </button>
+</div>
+
+<input type="text" id="note-title-input" class="note-title-input" placeholder="Title" value="{{ note.title or '' }}" autocomplete="off">
+<textarea id="note-content-input" class="note-content-input" placeholder="Jot down your idea&hellip;">{{ note.content }}</textarea>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.noteId = {{ note.id }};
+</script>
+<script src="{{ url_for('static', filename='js/notes.js') }}"></script>
+{% endblock %}

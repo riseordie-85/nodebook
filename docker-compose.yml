@@ -1,0 +1,34 @@
+services:
+  prompt-log:
+    build: .
+    container_name: prompt-log
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PATH=/app/instance/tracker.db
+      - UPLOAD_FOLDER=/app/uploads
+      - THUMBNAIL_FOLDER=/app/thumbnails
+      - REFERENCE_UPLOAD_FOLDER=/app/reference_uploads
+      - REFERENCE_THUMBNAIL_FOLDER=/app/reference_thumbnails
+    volumes:
+      - ./data/instance:/app/instance
+      - ./data/uploads:/app/uploads
+      - ./data/thumbnails:/app/thumbnails
+      - ./data/reference_uploads:/app/reference_uploads
+      - ./data/reference_thumbnails:/app/reference_thumbnails
+
+x-casaos:
+  architectures:
+    - amd64
+  main: prompt-log
+  title:
+    en_us: Nodebook
+  description:
+    en_us: ComfyUI prompt and image tracker
+  category: Utilities
+  port_map: "5000"
+  scheme: http
+  index: /

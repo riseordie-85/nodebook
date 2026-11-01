@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Reference Folders - Nodebook{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <h1>Reference Folders</h1>
+  <p class="muted">Folders for your reference images - separate from the AI-generation gallery's folders.</p>
+
+  <form method="post" class="inline-form">
+    <input type="text" name="name" placeholder="New folder name" required>
+    <input type="text" name="description" placeholder="Description (optional)">
+    <button type="submit" class="btn btn-primary">Create folder</button>
+  </form>
+
+  {% if folders %}
+  <table class="folder-table">
+    <thead>
+      <tr><th></th><th>Name</th><th>Description</th><th>Images</th><th></th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for f in folders %}
+      <tr>
+        <td><button type="button" class="pin-btn {{ 'pinned' if f.pinned else '' }}" data-folder-id="{{ f.id }}" title="{{ 'Unpin' if f.pinned else 'Pin' }}">&#9733;</button></td>
+        <td><a href="{{ url_for('reference_gallery', folder=f.id) }}" data-folder-id="{{ f.id }}" data-folder-name="{{ f.name }}">{{ f.name }}</a></td>
+        <td class="muted">{{ f.description or '—' }}</td>
+        <td>{{ f.image_count }}</td>
+        <td><button type="button" class="folder-rename-btn-standalone" data-folder-id="{{ f.id }}" data-folder-name="{{ f.name }}" title="Rename">&#9998;</button></td>
+        <td>
+          <form method="post" action="{{ url_for('reference_delete_folder', folder_id=f.id) }}" onsubmit="return confirm('Delete this folder? Images stay, just unassigned.');">
+            <button type="submit" class="btn-text-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state"><p>No folders yet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.pin-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    fetch(`/api/reference/folders/${btn.dataset.folderId}/pin`, { method: 'POST' })
+      .then((res) => { if (res.ok) window.location.reload(); });
+  });
+});
+document.querySelectorAll('.folder-rename-btn-standalone').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const currentName = btn.dataset.folderName;
+    const newName = prompt('Rename folder to:', currentName);
+    if (!newName || newName.trim() === '' || newName.trim() === currentName) return;
+    fetch(`/api/reference/folders/${btn.dataset.folderId}/rename`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName.trim() }),
+    }).then((res) => {
+      if (res.ok) window.location.reload();
+      else alert('Could not rename folder - name may already be in use.');
+    });
+  });
+});
+</script>
+{% endblock %}

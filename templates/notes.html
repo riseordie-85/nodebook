@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Notes - Nodebook{% endblock %}
+{% block content %}
+<div class="controls-bar">
+  <h1 class="notes-heading">Notes</h1>
+  <form method="post" action="{{ url_for('notes_new') }}">
+    <button type="submit" class="icon-btn" title="New note">
+      <span class="icon-glyph">&#43;</span>
+      <span class="icon-btn-label">New note</span>
+    </button>
+  </form>
+</div>
+
+{% if notes %}
+<div class="notes-grid">
+  {% for note in notes %}
+  <div class="note-card" data-note-id="{{ note.id }}">
+    <a class="note-card-link" href="{{ url_for('note_detail', note_id=note.id) }}">
+      <h3 class="note-card-title">
+        {% if note.title %}{{ note.title }}{% else %}Untitled{% endif %}
+        {% if note.pinned %}<span class="note-pin-indicator" title="Pinned">&#9733;</span>{% endif %}
+      </h3>
+      <p class="note-card-preview">{{ note.content[:160] }}{% if note.content|length > 160 %}&hellip;{% endif %}</p>
+    </a>
+    <div class="note-card-actions">
+      <button type="button" class="note-pin-btn {{ 'active' if note.pinned else '' }}" data-note-id="{{ note.id }}" title="{{ 'Unpin' if note.pinned else 'Pin' }}">&#9733;</button>
+      <button type="button" class="note-duplicate-btn" data-note-id="{{ note.id }}" title="Duplicate">&#10697;</button>
+      <button type="button" class="note-delete-btn" data-note-id="{{ note.id }}" title="Delete">&#128465;</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No notes yet.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/notes.js') }}"></script>
+{% endblock %}

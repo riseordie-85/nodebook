@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Log in - Nodebook{% endblock %}
+{% block content %}
+<div class="login-screen">
+  <form class="login-card" method="post">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Nodebook" class="login-logo">
+    <p class="muted">Enter the password to continue.</p>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <input type="password" name="password" placeholder="Password" autofocus required>
+    <button type="submit">Enter</button>
+  </form>
+
+  <div class="install-banner hidden" id="install-banner">
+    <div id="install-banner-android" class="hidden">
+      <p>Install Nodebook on this device for quick access and sharing support.</p>
+      <button type="button" class="btn" id="install-app-btn">Install App</button>
+    </div>
+    <div id="install-banner-ios" class="hidden">
+      <p>Install Nodebook: tap the <strong>Share</strong> button in Safari, then <strong>Add to Home Screen</strong>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  // Already running as the installed app? Nothing to prompt for.
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone) return;
+
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var isAndroid = /Android/.test(ua);
+
+  var banner = document.getElementById('install-banner');
+  var androidSection = document.getElementById('install-banner-android');
+  var iosSection = document.getElementById('install-banner-ios');
+  var installBtn = document.getElementById('install-app-btn');
+
+  if (isIOS) {
+    // Safari never fires an installability event and has no API to trigger
+    // "Add to Home Screen" programmatically - instructions are the best
+    // this platform allows.
+    banner.classList.remove('hidden');
+    iosSection.classList.remove('hidden');
+  } else if (isAndroid) {
+    // Chrome only fires this when it has actually decided the page is
+    // installable - so the button stays hidden until that happens, rather
+    // than showing a button that might not do anything yet.
+    var deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.classList.remove('hidden');
+      androidSection.classList.remove('hidden');
+    });
+    installBtn.addEventListener('click', function () {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.finally(function () {
+        deferredPrompt = null;
+        banner.classList.add('hidden');
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}
