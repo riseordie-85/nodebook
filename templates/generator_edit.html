@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Edit prompts - Nodebook{% endblock %}
+{% block content %}
+<div class="page-narrow-wide edit-page">
+  <p class="edit-back"><a href="{{ url_for('generator') }}">&larr; Back to the builder</a></p>
+  <h1>Edit prompts</h1>
+  <p class="muted">Edit any prompt in place and it saves when you click away. Tick prompts to delete several at once, or paste a list to add many.</p>
+
+  <div id="edit-tabs" class="edit-tabs" role="tablist"></div>
+
+  <details class="edit-add" id="edit-add">
+    <summary>Add prompts</summary>
+    <textarea id="edit-add-text" rows="6" placeholder="One prompt per line. Numbered lists are fine - the numbers are dropped."></textarea>
+    <div class="edit-add-actions">
+      <span class="muted small-note" id="edit-add-note"></span>
+      <button type="button" class="btn btn-primary" id="edit-add-btn">Add to <span id="edit-add-cat"></span></button>
+    </div>
+  </details>
+
+  <div class="edit-toolbar">
+    <label class="edit-selectall"><input type="checkbox" id="edit-select-all"> <span id="edit-showing"></span></label>
+    <input type="search" id="edit-search" placeholder="Filter this category..." autocomplete="off">
+    <button type="button" class="btn btn-danger" id="edit-delete-btn" disabled>Delete selected</button>
+  </div>
+
+  <ul id="edit-list" class="edit-list"></ul>
+  <p class="muted edit-empty" id="edit-empty" hidden></p>
+</div>
+
+<script type="application/json" id="edit-data">{{ builder_data | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/generator-edit.js') }}"></script>
+{% endblock %}

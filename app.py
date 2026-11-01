@@ -315,9 +315,7 @@ def register_routes(app):
     def _builder_item_json(row):
         return {"id": row["id"], "text": row["text"]}
 
-    @app.route("/generator")
-    @login_required
-    def generator():
+    def _builder_data():
         conn = db.get_db()
         categories = conn.execute("SELECT * FROM prompt_categories ORDER BY sort_order, id").fetchall()
         data = []
@@ -330,7 +328,17 @@ def register_routes(app):
                 "id": cat["id"], "key": cat["key"], "label": cat["label"],
                 "items": [_builder_item_json(i) for i in items],
             })
-        return render_template("generator.html", builder_data=data)
+        return data
+
+    @app.route("/generator")
+    @login_required
+    def generator():
+        return render_template("generator.html", builder_data=_builder_data())
+
+    @app.route("/generator/edit")
+    @login_required
+    def generator_edit():
+        return render_template("generator_edit.html", builder_data=_builder_data())
 
     @app.route("/api/generator/items", methods=["POST"])
     @login_required
@@ -391,6 +399,58 @@ def register_routes(app):
         if cur.rowcount == 0:
             return jsonify({"error": "Item not found"}), 404
         return jsonify({"ok": True})
+
+    @app.route("/api/generator/items/bulk-add", methods=["POST"])
+    @login_required
+    def api_builder_items_bulk_add():
+        """Add many prompts at once from pasted text, one per line. Leading
+        list numbers ("12. ") are stripped, blanks and duplicates (including
+        ones already in the category, ignoring case) are skipped."""
+        data = request.get_json(silent=True) or {}
+        category_id = data.get("category_id")
+        text = data.get("text")
+        conn = db.get_db()
+        if not isinstance(category_id, int) or not conn.execute(
+                "SELECT 1 FROM prompt_categories WHERE id = ?", (category_id,)).fetchone():
+            return jsonify({"error": "Category not found"}), 404
+        if not isinstance(text, str) or not text.strip():
+            return jsonify({"error": "Paste at least one prompt"}), 400
+        if len(text) > 500_000:
+            return jsonify({"error": "That's too much text to add at once"}), 400
+        lines = prompt_io.dedupe(text.splitlines())
+        existing = {r["text"].lower() for r in _existing_items(conn, category_id)}
+        fresh = [t for t in lines if t.lower() not in existing]
+        start = conn.execute(
+            "SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM prompt_items WHERE category_id = ?",
+            (category_id,),
+        ).fetchone()["n"]
+        added = []
+        for i, t in enumerate(fresh):
+            cur = conn.execute(
+                "INSERT INTO prompt_items (category_id, text, sort_order) VALUES (?,?,?)",
+                (category_id, t, start + i),
+            )
+            added.append({"id": cur.lastrowid, "text": t})
+        conn.commit()
+        return jsonify({"added": added, "skipped": len(text.splitlines()) - len(added)})
+
+    @app.route("/api/generator/items/bulk-delete", methods=["POST"])
+    @login_required
+    def api_builder_items_bulk_delete():
+        data = request.get_json(silent=True) or {}
+        ids = data.get("ids")
+        if (not isinstance(ids, list) or not ids or len(ids) > 5000
+                or not all(isinstance(i, int) and not isinstance(i, bool) for i in ids)):
+            return jsonify({"error": "Nothing selected"}), 400
+        conn = db.get_db()
+        deleted = 0
+        for start in range(0, len(ids), 500):  # stay under SQLite's variable limit
+            chunk = ids[start:start + 500]
+            cur = conn.execute(
+                "DELETE FROM prompt_items WHERE id IN (%s)" % ",".join("?" * len(chunk)), chunk)
+            deleted += cur.rowcount
+        conn.commit()
+        return jsonify({"deleted": deleted})
 
     # ---------- Prompt builder: Excel import / export ----------
 

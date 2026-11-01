@@ -133,6 +133,64 @@ class GeneratorTests(unittest.TestCase):
                                  [(cat["id"], r["text"], r["sort_order"]) for r in saved])
                 conn.commit()
 
+    # ---------- bulk editor ----------
+
+    def count(self, cat_id):
+        import db
+        with self.app.app_context():
+            return db.get_db().execute(
+                "SELECT COUNT(*) AS n FROM prompt_items WHERE category_id = ?", (cat_id,)).fetchone()["n"]
+
+    def test_edit_page_requires_login_and_renders(self):
+        self.assertIn(self.client(False).get("/generator/edit").status_code, (301, 302, 401))
+        r = self.client().get("/generator/edit")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b"edit-data", r.data)
+        self.assertIn(b"generator-edit.js", r.data)
+        self.assertIn(b"/generator/edit", self.client().get("/generator").data)  # link from the builder
+
+    def test_bulk_add_strips_numbers_dedupes_and_skips_existing(self):
+        c = self.client()
+        cat = self.category("pose")
+        before = self.count(cat["id"])
+        r = c.post("/api/generator/items/bulk-add", json={
+            "category_id": cat["id"],
+            "text": "1. bulk pose alpha\n2) Bulk Pose Alpha\n\n   bulk   pose beta  \n"})
+        self.assertEqual(r.status_code, 200)
+        added = r.get_json()["added"]
+        self.assertEqual([a["text"] for a in added], ["bulk pose alpha", "bulk pose beta"])
+        self.assertEqual(self.count(cat["id"]), before + 2)
+        # Same again: everything already there (case-insensitive)
+        r = c.post("/api/generator/items/bulk-add", json={"category_id": cat["id"], "text": "BULK POSE ALPHA"})
+        self.assertEqual(r.get_json()["added"], [])
+        self.assertEqual(r.get_json()["skipped"], 1)
+        c.post("/api/generator/items/bulk-delete", json={"ids": [a["id"] for a in added]})
+        self.assertEqual(self.count(cat["id"]), before)
+
+    def test_bulk_add_rejects_bad_input(self):
+        c = self.client()
+        cat = self.category("pose")
+        self.assertEqual(c.post("/api/generator/items/bulk-add", json={"category_id": 99999, "text": "x"}).status_code, 404)
+        self.assertEqual(c.post("/api/generator/items/bulk-add", json={"category_id": "1", "text": "x"}).status_code, 404)
+        self.assertEqual(c.post("/api/generator/items/bulk-add", json={"category_id": cat["id"], "text": "  \n "}).status_code, 400)
+        self.assertEqual(c.post("/api/generator/items/bulk-add", json={"category_id": cat["id"]}).status_code, 400)
+        self.assertIn(self.client(False).post("/api/generator/items/bulk-add",
+                      json={"category_id": cat["id"], "text": "x"}).status_code, (301, 302, 401))
+
+    def test_bulk_delete_counts_and_validation(self):
+        c = self.client()
+        cat = self.category("details")
+        before = self.count(cat["id"])
+        ids = [c.post("/api/generator/items", json={"category_id": cat["id"], "text": "bulkdel %d" % i}).get_json()["id"]
+               for i in range(3)]
+        r = c.post("/api/generator/items/bulk-delete", json={"ids": ids + [987654]})
+        self.assertEqual(r.get_json()["deleted"], 3)  # unknown id is ignored, not an error
+        self.assertEqual(self.count(cat["id"]), before)
+        for bad in ({}, {"ids": []}, {"ids": "1"}, {"ids": [1, "2"]}, {"ids": [True]}, {"ids": [1.5]}):
+            self.assertEqual(c.post("/api/generator/items/bulk-delete", json=bad).status_code, 400, bad)
+        self.assertIn(self.client(False).post("/api/generator/items/bulk-delete", json={"ids": [1]}).status_code,
+                      (301, 302, 401))
+
 
 if __name__ == "__main__":
     unittest.main()

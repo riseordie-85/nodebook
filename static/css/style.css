@@ -608,6 +608,77 @@ h3 { font-size: 0.85rem; color: var(--muted); margin-top: 1.2em; }
   border-radius: 3px;
 }
 
+
+/* Bulk editor */
+.edit-back { margin: 0 0 0.4rem; font-size: 0.85rem; }
+.edit-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0; }
+.edit-tab {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.edit-tab:hover { color: var(--text); border-color: var(--accent); }
+.edit-tab.active { background: var(--accent); border-color: var(--accent); color: #1a1408; font-weight: 500; }
+.edit-tab-count { font-family: var(--mono); font-size: 0.72rem; opacity: 0.8; }
+
+.edit-add { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0.7rem 0.9rem; margin-bottom: 0.9rem; }
+.edit-add summary { cursor: pointer; font-size: 0.88rem; font-weight: 500; }
+.edit-add textarea {
+  width: 100%;
+  margin-top: 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding: 0.6rem;
+  border-radius: 3px;
+  resize: vertical;
+}
+.edit-add textarea:focus { outline: none; border-color: var(--accent); }
+.edit-add-actions { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; margin-top: 0.6rem; flex-wrap: wrap; }
+.edit-add-actions .small-note { margin: 0; }
+
+.edit-toolbar {
+  display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+  position: sticky; top: 3.5rem; z-index: 5;
+  background: var(--bg); padding: 0.55rem 0; border-bottom: 1px solid var(--border);
+}
+.edit-selectall { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+.edit-selectall input, .edit-check { accent-color: var(--accent); width: 1.05rem; height: 1.05rem; }
+.edit-toolbar input[type="search"] {
+  flex: 1; min-width: 10rem;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  font-family: var(--sans); font-size: 0.85rem; padding: 0.4rem 0.6rem; border-radius: 3px;
+}
+.edit-toolbar input[type="search"]:focus { outline: none; border-color: var(--accent); }
+
+.edit-list { list-style: none; margin: 0.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.edit-row {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 0.6rem; align-items: start;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem 0.6rem;
+}
+.edit-row:focus-within { border-color: var(--accent); }
+.edit-row.has-error { border-color: var(--danger); }
+.edit-check { margin-top: 0.45rem; }
+.edit-main { min-width: 0; }
+.edit-text {
+  display: block; width: 100%; resize: none; overflow: hidden;
+  background: transparent; border: none; color: var(--text);
+  font-family: var(--sans); font-size: 0.88rem; line-height: 1.5; padding: 0.25rem 0.1rem;
+}
+.edit-text:focus { outline: none; }
+.edit-status { font-size: 0.75rem; color: var(--muted); }
+.edit-status.ok { color: var(--accent); }
+.edit-status.error { color: var(--danger); }
+.edit-empty { text-align: center; padding: 1.5rem 0; }
+
 /* ---------- Folders page ---------- */
 .inline-form { display: flex; gap: 0.6rem; margin: 1.2rem 0 1.8rem; }
 .inline-form input {
