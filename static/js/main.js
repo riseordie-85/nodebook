@@ -1,6 +1,10 @@
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.copy-btn');
-  if (!btn) return;
+  // Only buttons that carry their text in data-copy-text are handled here;
+  // pages with their own copy logic (e.g. the prompt builder) reuse the
+  // .copy-btn look without being hijacked - this used to overwrite their
+  // clipboard with an empty string.
+  if (!btn || !('copyText' in btn.dataset)) return;
 
   const text = btn.dataset.copyText || '';
   try {
